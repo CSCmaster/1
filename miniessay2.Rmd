@@ -1,0 +1,106 @@
+---
+title: "miniessay2"
+output: pdf_document
+date: "2024-01-15"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+install.packages("opendatatoronto")
+install.packages("knitr")
+
+library(knitr)
+library(janitor)
+library(lubridate)
+library(opendatatoronto)
+library(tidyverse)
+#### Acquire ####
+toronto_shelters <-
+  # Each package is associated with a unique id  found in the "For 
+  # Developers" tab of the relevant page from Open Data Toronto
+  # https://open.toronto.ca/dataset/daily-shelter-overnight-service-occupancy-capacity/
+  list_package_resources("21c83b32-d5a8-4106-a54f-010dbe49f6f2") |>
+  # Within that package, we are interested in the 2021 dataset
+  filter(name == 
+    "daily-shelter-overnight-service-occupancy-capacity-2021.csv") |>
+  # Having reduced the dataset to one row we can get the resource
+  get_resource()
+
+write_csv(
+  x = toronto_shelters,
+  file = "toronto_shelters.csv"
+)
+
+head(toronto_shelters)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+#### Simulate ####
+set.seed(1850)
+
+simulated_ShelterUsage_data <-
+  tibble(
+    date = rep(x = as.Date("2021-12-01") + c(0:367), times = 4),
+    # Based on Eddelbuettel: https://stackoverflow.com/a/21502386
+    shelter = c(
+      rep(x = "ShelterUsage 1", times = 368),
+      rep(x = "ShelterUsage 2", times = 368),
+      rep(x = "ShelterUsage 3", times = 368),
+      rep(x = "shelterUsage 4", times = 368)
+    ),
+    number_of_beds =
+      rpois(
+        n = 368 * 4,
+        lambda = 40
+      ) # Draw 1472 times from the Poisson distribution
+  )
+
+head(simulated_ShelterUsage_data)
+```
+First of all, I use the function set.seed(1850) whihc sets the seed for the random number generator. Setting a seed ensures that the random numbers generated are reproducible. If you run the code with the same seed, you should get the same random numbers.
+
+Then I use the function simulated_ShelterUsage_data <- tibble(...): This creates a tibble (a data frame) named simulated_ShelterUsage_data with three columns: date, shelter, and number_of_beds.
+
+I also use the function date = rep(x = as.Date("2021-12-01") + c(0:367), times = 4): This creates a sequence of dates starting from "2021-12-01" and extending for 368 days (0 to 367). This sequence is repeated four times, corresponding to the four different shelter types.
+
+The function of shelter = c(...):  creates a vector of shelter names. Each shelter name is repeated 368 times to match the length of the date sequence. There are four different shelter names: "ShelterUsage 1", "ShelterUsage 2", "ShelterUsage 3", and "ShelterUsage 4".
+
+Finally, I used the function number_of_beds = rpois(n = 368 * 4, lambda = 40): This generates random data for the number of beds in each shelter. It draws 1472 (368 * 4) samples from a Poisson distribution with a mean (lambda) of 40. The Poisson distribution is commonly used to model counts of events that happen independently and with a constant mean rate.
+
+In summary, the code is creating a simulated dataset for shelter usage, including dates, shelter names, and the number of beds in each shelter. The number of beds is generated randomly based on a Poisson distribution with a mean of 40.
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+# Install and load the ggplot2 library if not already installed
+if (!requireNamespace("ggplot2", quietly = TRUE)) {
+  install.packages("ggplot2")
+}
+library(ggplot2)
+
+# Create a histogram of the number_of_beds variable
+histogram_plot <- ggplot(simulated_ShelterUsage_data, aes(x = number_of_beds, fill = shelter)) +
+  geom_histogram(binwidth = 5, position = "dodge", color = "black", alpha = 0.7) +
+  labs(title = "Distribution of Number of Beds",
+       x = "Number of Beds",
+       y = "Frequency") +
+  theme_minimal()
+
+# Display the histogram
+print(histogram_plot)
+
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+Now let me describe the histogram, the histogram is neither left skewed nor right skewed, it is centered.The x-axis will represent the number of beds in the shelters, and it will be divided into bins. Each bin will likely cover a range of 5 beds due to the binwidth = 5 argument. The y-axis will represent the frequency or count of occurrences for each bin. It shows how many times a particular range of the number of beds appears in the dataset. The bars will be colored differently based on the "shelter" variable, and bars of the same color will represent data points from the same shelter. The legend or different shades will differentiate between the shelter types.
+
+Title and Axis Labels: The plot will have a title at the top ("Distribution of Number of Beds") and labeled x and y-axes. The x-axis will be labeled "Number of Beds," and the y-axis will be labeled "Frequency.
